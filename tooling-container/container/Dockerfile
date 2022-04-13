@@ -103,7 +103,7 @@ echo podman:10000:5000 > /etc/subgid;
 
 VOLUME /var/lib/containers
 RUN mkdir -p /home/podman/.local/share/containers
-RUN chown podman:podman -R /home/podman && useradd -aG podman ${NORMAL_USER}
+RUN chown podman:podman -R /home/podman && usermod -aG podman ${NORMAL_USER}
 VOLUME /home/podman/.local/share/containers
 
 #https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/containers.conf
