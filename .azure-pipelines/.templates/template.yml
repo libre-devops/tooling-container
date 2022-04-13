@@ -96,7 +96,7 @@ jobs:
           
           podman build \
           --file="${{ parameters.DOCKERFILE_NAME }}" \
-          --tag="${{ parameters.REGISTRY }}/${{ parameters.USERNAME }}/${{ parameters.IMAGE_NAME }}${INDEX}${{ parameters.TAGS }}" \
+          --tag="${{ parameters.REGISTRY }}/${{ parameters.USERNAME }}/${{ parameters.IMAGE_NAME }}${{ parameters.TAGS }}" \
           --build-arg NORMAL_USER="${{ parameters.NORMAL_USER }}"  \
           --build-arg ACCEPT_EULA="y" \
           --build-arg PYTHON3_VERSION="${{ parameters.PYTHON3_VERSION }}" \
