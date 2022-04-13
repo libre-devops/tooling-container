@@ -153,3 +153,5 @@ RUN pip3 install --user \
         echo 'alias powershell="pwsh"' >> /root/.bashrc
 
 USER ${NORMAL_USER}
+
+WORKDIR /azp
