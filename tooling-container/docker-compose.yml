@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+
+  dev-container:
+    build: ./tooling-container
+    image: "ghcr.io/libre-devops/tooling-container:latest"
+    restart: unless-stopped
+    privileged: true
