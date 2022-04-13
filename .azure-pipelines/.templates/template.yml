@@ -104,7 +104,7 @@ jobs:
           --build-arg GO_VERSION="${{ parameters.GO_VERSION }}" \
           --build-arg JAVA_VERSION="${{ parameters.JAVA_VERSION }}" && \
           
-          podman push "${{ parameters.REGISTRY }}/${{ parameters.USERNAME }}/${{ parameters.IMAGE_NAME }}${INDEX}${{ parameters.TAGS }}"
+          podman push "${{ parameters.REGISTRY }}/${{ parameters.USERNAME }}/${{ parameters.IMAGE_NAME }}${{ parameters.TAGS }}"
           
           done
           
