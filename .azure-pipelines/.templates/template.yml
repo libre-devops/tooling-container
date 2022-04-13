@@ -53,28 +53,6 @@ parameters:
     default: "6.0"
     type: string
 
-  - name: AZP_URL
-    displayName: "The URL of your Azure DevOps instance, e.g. https://dev.azure.com/example"
-    type: string
-
-  - name: AZP_TOKEN
-    displayName: "The PAT token for your Agent to access Azure DevOps"
-    type: string
-
-  - name: AZP_AGENT_NAME
-    displayName: "The name for your agent"
-    default: $(head /dev/urandom | tr -dc A-Za-z0-9 | head -c10)
-    type: string
-
-  - name: AZP_POOL
-    displayName: "The pool for your agent to join"
-    type: string
-
-  - name: AZP_WORK
-    displayName: "The default working directory for your agent"
-    default: "_work"
-    type: string
-
   - name: REGISTRY
     displayName: "The target registry"
     default: "ghcr.io"
@@ -124,12 +102,8 @@ jobs:
           --build-arg PYTHON3_VERSION="${{ parameters.PYTHON3_VERSION }}" \
           --build-arg DOTNET_VERSION="${{ parameters.DOTNET_VERSION }}" \
           --build-arg GO_VERSION="${{ parameters.GO_VERSION }}" \
-          --build-arg JAVA_VERSION="${{ parameters.JAVA_VERSION }}" \
-          --build-arg AZP_URL="${{ parameters.AZP_URL }}" \
-          --build-arg AZP_TOKEN="${{ parameters.AZP_TOKEN }}" \
-          --build-arg AZP_AGENT_NAME="${{ parameters.AZP_AGENT_NAME }}" \
-          --build-arg AZP_POOL="${{ parameters.AZP_POOL }}" \
-          --build-arg AZP_WORK="${{ parameters.AZP_WORK}}"
+          --build-arg JAVA_VERSION="${{ parameters.JAVA_VERSION }}" && \
+          
           podman push "${{ parameters.REGISTRY }}/${{ parameters.USERNAME }}/${{ parameters.IMAGE_NAME }}${INDEX}${{ parameters.TAGS }}"
           
           done
