@@ -81,11 +81,6 @@ parameters:
     default: $(PASSWORD)
     type: string
     
-  - name: AZP_SECRETS_VARIABLE_GROUP
-    displayName: "The name of the variable group holding the secrets"
-    default: "LINUX_AZURE_DEVOPS_SECRETS"
-    type: string
-
   - name: TEMPLATE_PATH
     displayName: "The name of the variable group holding the secrets"
     default: ".templates/template.yml"
@@ -98,7 +93,6 @@ parameters:
 
 variables:
   - group: ${{ parameters.SECRETS_VARIABLE_GROUP }}
-  - group: ${{ parameters.AZP_SECRETS_VARIABLE_GROUP }}
 
 jobs:
   - template: ${{ parameters.TEMPLATE_PATH }}
