@@ -115,8 +115,3 @@ jobs:
       JAVA_VERSION: ${{ parameters.JAVA_VERSION }}
       IMAGE_NAME: ${{ parameters.IMAGE_NAME }}
       TAGS: ${{ parameters.TAGS }}
-      AZP_URL: ${{ parameters.AZP_URL }}
-      AZP_TOKEN: ${{ parameters.AZP_TOKEN }}
-      AZP_POOL: ${{ parameters.AZP_POOL }}
-      AZP_AGENT_NAME: ${{ parameters.AZP_AGENT_NAME }}
-      AZP_WORK: ${{ parameters.AZP_WORK }}
