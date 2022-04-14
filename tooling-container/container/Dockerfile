@@ -129,10 +129,8 @@ RUN pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
 USER ${NORMAL_USER}
 
 RUN echo -en "\n" | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-    test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)" && \
-    test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
-    test -r ~/.bash_profile && echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bash_profile && \
-    echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.profile && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/${NORMAL_USER}/.bash_profile && \
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
     source ~/.bash_profile && source ~/.bashrc && \
     curl -s "https://get.sdkman.io" | bash && \
     source "$HOME/.sdkman/bin/sdkman-init.sh" && \
