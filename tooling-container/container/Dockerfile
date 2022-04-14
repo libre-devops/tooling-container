@@ -55,7 +55,7 @@ RUN mkdir -p /azp && \
                 pip3 install --upgrade pip && \
                 pip3 install azure-cli && \
                 pip3 install --upgrade azure-cli && \
-                pip3 install ansible terraform-compliance pywinrm && \
+                pip3 install ansible terraform-compliance pywinrm checkov pipenv virtualenv && \
                 mkdir -p /home/linuxbrew && \
                 chown -R ${NORMAL_USER}:${NORMAL_USER} /home/linuxbrew && \
                 az config set extension.use_dynamic_install=yes_without_prompt
@@ -129,8 +129,10 @@ RUN pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted
 USER ${NORMAL_USER}
 
 RUN echo -en "\n" | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/${NORMAL_USER}/.bash_profile && \
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/${NORMAL_USER}/.bashrc && \
+    test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)" && \
+    test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)" && \
+    test -r ~/.bash_profile && echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bash_profile && \
+    echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.profile && \
     source ~/.bash_profile && source ~/.bashrc && \
     curl -s "https://get.sdkman.io" | bash && \
     source "$HOME/.sdkman/bin/sdkman-init.sh" && \
