@@ -4,11 +4,12 @@ name: $(BuildDefinitionName)_$(SourceBranchName)_$(date:yyyyMMdd)$(rev:.r)
 trigger:
   branches:
     include:
-    - main
+    - main/container/*
     exclude:
       - develop
       - bug*
       - feature*
+      - README.md
 
 parameters:
   - name: AGENT_AMOUNT
