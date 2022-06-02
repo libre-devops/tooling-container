@@ -1,16 +1,20 @@
 ---
 version: "3.8"
 services:
-  gui-dev-container:
-    build: ./container
+  rdesktop:
     image: ghcr.io/libre-devops/gui-tooling-container:latest
-    security_opt:
-      - seccomp:unconfined #optional
+    build: ./container
+    container_name: tooling-container
+    volumes:
+      - dev-container-data:/config #optional
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
     ports:
-      - 3390:3389
+      - 3389:3389
     shm_size: "1gb" #optional
     restart: unless-stopped
+
+volumes:
+  dev-container-data:

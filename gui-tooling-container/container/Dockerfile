@@ -3,32 +3,24 @@ FROM docker.io/linuxserver/rdesktop:ubuntu-mate
 
 LABEL org.opencontainers.image.source=https://github.com/libre-devops/tooling-container
 
+ARG DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+
 #Set args with blank values - these will be over-written with the CLI
 ARG NORMAL_USER=abc
-ARG PYTHON3_VERSION=3.10.4
-ARG DOTNET_VERSION=6.0
-ARG GO_VERSION=1.18.1
-ARG JAVA_VERSION=17
-ARG DEBIAN_FRONTEND=noninteractive
+ARG ACCEPT_EULA="yes"
 
 ENV ACCEPT_EULA ${ACCEPT_EULA}
-ENV PYTHON3_VERSION ${PYTHON3_VERSION}
-ENV DOTNET_VERSION ${DOTNET_VERSION}
-ENV GO_VERSION ${GO_VERSION}
-ENV JAVA_VERSION ${JAVA_VERSION}
-ENV NORMAL_USER ${NORMAL_USER}
-ENV DEBIAN_FRONTEND=noninteractive
 
 #Declare user expectation, I am performing root actions, so use root.
 USER root
 
 #Install needed packages as well as setup python with args and pip
 RUN mkdir -p /azp && \
-    #Make unpriviledged user
-    chown -R ${NORMAL_USER} /azp && \
     apt-get update -y && apt-get dist-upgrade -y && apt-get install -y \
     apt-transport-https \
     bash \
+    build-essential \
     libbz2-dev \
     ca-certificates \
     curl \
@@ -40,6 +32,7 @@ RUN mkdir -p /azp && \
     libffi-dev \
     libicu-dev \
     make \
+    nano \
     software-properties-common \
     libsqlite3-dev \
     libssl-dev\
@@ -47,24 +40,14 @@ RUN mkdir -p /azp && \
     wget \
     zip  \
     zlib1g-dev && \
-              wget https://www.python.org/ftp/python/${PYTHON3_VERSION}/Python-${PYTHON3_VERSION}.tgz && \
-              tar xzf Python-${PYTHON3_VERSION}.tgz && rm -rf tar xzf Python-${PYTHON3_VERSION}.tgz && \
-              cd Python-${PYTHON3_VERSION} && ./configure --enable-optimizations --enable-loadable-sqlite-extensions && \
-              make install && cd .. && rm -rf Python-${PYTHON3_VERSION} && \
-              export PATH=$PATH:/usr/local/bin/python3 && curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-              python3 get-pip.py && pip3 install virtualenv && rm -rf get-pip.py && \
-                pip3 install --upgrade pip && \
-                pip3 install azure-cli && \
-                pip3 install --upgrade azure-cli && \
-                pip3 install ansible terraform-compliance pywinrm checkov pipenv virtualenv && \
-                mkdir -p /home/linuxbrew && \
-                chown -R ${NORMAL_USER} /home/linuxbrew && \
-                az config set extension.use_dynamic_install=yes_without_prompt && \
+                useradd -m -s /bin/bash linuxbrew && \
+                usermod -aG sudo linuxbrew &&  \
+                mkdir -p /home/linuxbrew/.linuxbrew && \
+                chown -R linuxbrew: /home/linuxbrew/.linuxbrew && \
     wget -q https://packages.microsoft.com/config/ubuntu/$(grep -oP '(?<=^DISTRIB_RELEASE=).+' /etc/lsb-release | tr -d '"')/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update && \
-    apt-get install -y powershell && \
-    apt-get install -y dotnet-sdk-${DOTNET_VERSION}
+    apt-get install -y powershell
 
 RUN echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /" | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
 curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key" | apt-key add - && \
@@ -73,28 +56,8 @@ apt-get -y upgrade && \
 apt-get -y install container-tools && \
 apt-get install -y crun podman  fuse-overlayfs
 
-RUN terraformLatestVersion=$(curl -sL https://releases.hashicorp.com/terraform/index.json | jq -r '.versions[].builds[].url' | egrep -v 'rc|beta|alpha' | egrep 'linux.*amd64'  | tail -1) && \
-    wget "${terraformLatestVersion}" && \
-    unzip terraform* && rm -rf terraform*.zip && \
-    mv terraform /usr/local/bin && \
-    packerLatestVersion=$(curl -sL https://releases.hashicorp.com/packer/index.json | jq -r '.versions[].builds[].url' | egrep -v 'rc|beta|alpha' | egrep 'linux.*amd64'  | tail -1) && \
-    wget "${packerLatestVersion}" && \
-    unzip packer* && rm -rf packer*.zip && \
-    mv packer /usr/local/bin
-
-RUN rm -rf /usr/local/go && \
-    wget https://storage.googleapis.com/golang/go${GO_VERSION}.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
-    export PATH=$PATH:/usr/local/go/bin && \
-    export GOPATH=/usr/local/go/dev && \
-    export PATH=$PATH:$GOPATH/bin && \
-    rm -rf go${GO_VERSION}.linux-amd64.tar.gz && \
-    GO111MODULE="on" go install github.com/terraform-docs/terraform-docs@latest && \
-    GO111MODULE="on" go install github.com/aquasecurity/tfsec/cmd/tfsec@latest
-
 RUN curl -s "https://get.sdkman.io" | bash && \
-    nvmLatest=$(curl --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && \
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/${nvmLatest}/install.sh | bash
+    chmod 777 -R /root
 
 RUN useradd podman; \
 echo podman:10000:5000 > /etc/subuid; \
@@ -122,30 +85,30 @@ RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/
 
 ENV _CONTAINERS_USERNS_CONFIGURED=""
 
-#Install Azure Modules for Powershell - This can take a while, so setting as final step to shorten potential rebuilds
-RUN pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted ; pwsh -Command Install-Module -Name Az -Force -AllowClobber -Scope AllUsers -Repository PSGallery
-
-##Set as unpriviledged user for default container execution
-#USER ${NORMAL_USER}
-
-RUN curl -s "https://get.sdkman.io" | sudo -S bash && \
-    az config set extension.use_dynamic_install=yes_without_prompt
-#    echo -en "\n" | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-#    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /config/.bash_profile && \
-#    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-USER root
-
-ENV GOPATH=/usr/local/go/dev
+##Install Azure Modules for Powershell - This can take a while, so setting as final step to shorten potential rebuilds
+#RUN pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted ; pwsh -Command Install-Module -Name Az -Force -AllowClobber -Scope AllUsers -Repository PSGallery
 
 #Set User Path with expected paths for new packages
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/config/.local/bin:${PATH}"
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
+ENV PATHVAR="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
 
-#Install User Packages
-RUN pip3 install --user \
-    checkov \
-    pipenv \
-    terraform-compliance \
-    virtualenv && \
-        echo 'alias powershell="pwsh"' >> /config/.bashrc && \
-        echo 'alias powershell="pwsh"' >> /root/.bashrc
+RUN echo ${PATHVAR} | tee /etc/environment
+#ENV GOPATH=/usr/local/go/dev
+
+##Set as unpriviledged user for default container execution
+USER linuxbrew
+
+#RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+#    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/linuxbrew/.bash_profile && \
+#    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/linuxbrew/.bashrc && \
+#    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+#RUN brew install gcc tfenv azure-cli go nvm python3 tfsec && tfenv install latest && tfenv use latest
+#RUN cd /home/linuxbrew/ && brew tap kwilczynski/homebrew-pkenv && \
+#    brew install pkenv && pkenv install latest
+
+USER abc
+RUN echo ${PATHVAR} | tee /config/.bashrc
+
+USER root
+RUN echo ${PATHVAR} | tee /root/.bashrc
