@@ -23,8 +23,6 @@ stop_xrdp_services() {
 
 echo Entryponit script is Running...
 
-
-
 addgroup ${USERNAME}
 useradd -m -s /bin/bash -g ${USERNAME} ${USERNAME}
 wait
@@ -33,6 +31,8 @@ echo ${USERNAME}:${PASSWORD} | chpasswd
 wait
 usermod -aG sudo ${USERNAME}
 usermod -aG podman ${USERNAME}
+echo "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin" >> /home/${USERNAME}/.bashrc
+chown -R ${USERNAME} /home/linuxbrew
 wait
 echo "user '${USERNAME}' is added"
 

@@ -5,8 +5,10 @@ services:
     image: ghcr.io/libre-devops/gui-tooling-container:latest
     build: ./container
     container_name: tooling-container
-#    volumes:
-#      - dev-container-data:/ #optional
+    privileged: true
+    volumes:
+      - dev-container-home:/home
+      - dev-container-opt:/opt
     environment:
       - TZ=Europe/London
     ports:
@@ -15,5 +17,6 @@ services:
     restart: unless-stopped
 
 
-#volumes:
-#  dev-container-data:
+volumes:
+  dev-container-home:
+  dev-container-opt:

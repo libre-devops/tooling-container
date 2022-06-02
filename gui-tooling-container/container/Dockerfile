@@ -2,10 +2,6 @@ FROM ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
-#ARG NORMAL_USER=lbdo
-#ENV NORMAL_USER ${NORMAL_USER}
-#ARG PASSWORD=libredevopspassword
-#ENV PASSWORD ${PASSWORD}
 
 #Set User Path with expected paths for new packages
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
@@ -23,13 +19,17 @@ RUN mkdir -p /azp && \
     gcc \
     gnupg \
     gnupg2 \
+    gpg \
     git \
     jq \
     libffi-dev \
     libicu-dev \
+    locales \
     make \
     nano \
+    sudo  \
     software-properties-common \
+    terminator \
     libsqlite3-dev \
     libssl-dev\
     unzip \
@@ -43,7 +43,21 @@ RUN mkdir -p /azp && \
     wget -q https://packages.microsoft.com/config/ubuntu/$(grep -oP '(?<=^DISTRIB_RELEASE=).+' /etc/lsb-release | tr -d '"')/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update && \
-    apt-get install -y powershell
+    apt-get install -y powershell && \
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg && \
+    sudo install -o root -g root -m 644 packages.microsoft.gpg /etc/apt/trusted.gpg.d/ && \
+    sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list' && \
+    rm -f packages.microsoft.gpg && \
+     curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
+    sudo install -o root -g root -m 644 microsoft.gpg /usr/share/keyrings/ && \
+    sudo sh -c 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge-beta.list' && \
+    sudo rm microsoft.gpg && \
+    sudo apt-get update && \
+    sudo apt-get install microsoft-edge-beta -y && \
+    apt-get update && apt-get install code && apt-get autoremove
+
+COPY install-jetbrains-toolbox.sh /usr/bin/
+RUN chmod +x /usr/bin/install-jetbrains-toolbox.sh && ./usr/bin/install-jetbrains-toolbox.sh
 
 RUN echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /" | tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
 curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key" | apt-key add - && \
@@ -51,8 +65,6 @@ apt-get update && \
 apt-get -y upgrade && \
 apt-get -y install container-tools && \
 apt-get install -y crun podman  fuse-overlayfs
-
-RUN curl -s "https://get.sdkman.io" | bash
 
 RUN useradd podman; \
 echo podman:10000:5000 > /etc/subuid; \
@@ -93,9 +105,12 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
     echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/linuxbrew/.bashrc && \
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-RUN brew install gcc tfenv azure-cli go nvm python3 tfsec && tfenv install latest && tfenv use latest
+RUN brew install gcc tfenv azure-cli python3 tfsec terraform-docs openjdk yq && tfenv install latest && tfenv use latest
 RUN cd /home/linuxbrew/ && brew tap kwilczynski/homebrew-pkenv && \
     brew install pkenv && pkenv install latest
+
+RUN pip3 install pipx && \
+    pipx install terraform-compliance checkov ansible-core
 
 USER root
 
@@ -114,8 +129,8 @@ RUN apt-get install -y \
     wget \
     xorgxrdp \
     xrdp && \
-    apt remove -y light-locker xscreensaver && \
-    apt autoremove -y && \
+    apt-get remove -y light-locker xscreensaver && \
+    apt-get autoremove -y && \
     rm -rf /var/cache/apt /var/lib/apt/lists
 
 COPY run.sh /usr/bin/
