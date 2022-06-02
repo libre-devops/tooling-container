@@ -25,6 +25,8 @@ podman pull ghcr.io/libre-devops/gui-tooling-container:latest
 
 You can also build it using `podman-compose` with the docker-compose linked.
 
+Then, RDP on the port defined in your compose and use the username `lbdo` and the password `libredevopspassword`
+
 You should use the copy stored within the `gui-tooling-container` part of this repo as that is the one built by the CI/CD.  The other files are kept for development reasons.
 
 ## Saving state
