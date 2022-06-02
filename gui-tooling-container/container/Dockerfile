@@ -2,10 +2,10 @@ FROM ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
-ARG NORMAL_USER=lbdo
-ENV NORMAL_USER ${NORMAL_USER}
-ARG PASSWORD=libredevopspassword
-ENV PASSWORD ${PASSWORD}
+#ARG NORMAL_USER=lbdo
+#ENV NORMAL_USER ${NORMAL_USER}
+#ARG PASSWORD=libredevopspassword
+#ENV PASSWORD ${PASSWORD}
 
 #Set User Path with expected paths for new packages
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
@@ -40,10 +40,6 @@ RUN mkdir -p /azp && \
                 usermod -aG sudo linuxbrew &&  \
                 mkdir -p /home/linuxbrew/.linuxbrew && \
                 chown -R linuxbrew: /home/linuxbrew/.linuxbrew && \
-                addgroup ${NORMAL_USER} && \
-                useradd -m -s /bin/bash -g ${NORMAL_USER} ${NORMAL_USER} && \
-                usermod -aG sudo ${NORMAL_USER} && \
-                echo ${NORMAL_USER}:${PASSWORD} | chpasswd && \
     wget -q https://packages.microsoft.com/config/ubuntu/$(grep -oP '(?<=^DISTRIB_RELEASE=).+' /etc/lsb-release | tr -d '"')/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update && \
@@ -64,7 +60,7 @@ echo podman:10000:5000 > /etc/subgid;
 
 VOLUME /var/lib/containers
 RUN mkdir -p /home/podman/.local/share/containers
-RUN chown podman:podman -R /home/podman && usermod -aG podman ${NORMAL_USER}
+RUN chown podman:podman -R /home/podman
 VOLUME /home/podman/.local/share/containers
 
 #https://raw.githubusercontent.com/containers/libpod/master/contrib/podmanimage/stable/containers.conf

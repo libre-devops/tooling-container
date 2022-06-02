@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+USERNAME="lbdo"
+PASSWORD="libredevopspassword"
+
 start_xrdp_services() {
     # Preventing xrdp startup failure
     rm -rf /var/run/xrdp-sesman.pid
@@ -17,7 +20,23 @@ stop_xrdp_services() {
     exit 0
 }
 
+
 echo Entryponit script is Running...
+
+
+
+addgroup ${USERNAME}
+useradd -m -s /bin/bash -g ${USERNAME} ${USERNAME}
+wait
+#getent passwd | grep foo
+echo ${USERNAME}:${PASSWORD} | chpasswd
+wait
+usermod -aG sudo ${USERNAME}
+usermod -aG podman ${USERNAME}
+wait
+echo "user '${USERNAME}' is added"
+
+echo -e "This script is ended\n"
 
 echo -e "starting xrdp services...\n"
 
