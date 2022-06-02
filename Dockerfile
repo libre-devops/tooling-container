@@ -1,5 +1,7 @@
 FROM ubuntu:focal
 
+LABEL org.opencontainers.image.source=https://github.com/libre-devops/wsl-dev-env-container
+
 ARG DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
