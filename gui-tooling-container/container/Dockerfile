@@ -27,6 +27,7 @@ RUN mkdir -p /azp && \
     locales \
     make \
     nano \
+    neofetch \
     sudo  \
     software-properties-common \
     terminator \
