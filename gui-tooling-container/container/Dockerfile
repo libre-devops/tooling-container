@@ -1,19 +1,15 @@
-#Use supplier image
-FROM docker.io/linuxserver/rdesktop:ubuntu-mate
-
-LABEL org.opencontainers.image.source=https://github.com/libre-devops/tooling-container
+FROM ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
+ARG NORMAL_USER=lbdo
+ENV NORMAL_USER ${NORMAL_USER}
+ARG PASSWORD=libredevopspassword
+ENV PASSWORD ${PASSWORD}
 
-#Set args with blank values - these will be over-written with the CLI
-ARG NORMAL_USER=abc
-ARG ACCEPT_EULA="yes"
-
-ENV ACCEPT_EULA ${ACCEPT_EULA}
-
-#Declare user expectation, I am performing root actions, so use root.
-USER root
+#Set User Path with expected paths for new packages
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
+ENV PATHVAR="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
 
 #Install needed packages as well as setup python with args and pip
 RUN mkdir -p /azp && \
@@ -44,6 +40,10 @@ RUN mkdir -p /azp && \
                 usermod -aG sudo linuxbrew &&  \
                 mkdir -p /home/linuxbrew/.linuxbrew && \
                 chown -R linuxbrew: /home/linuxbrew/.linuxbrew && \
+                addgroup ${NORMAL_USER} && \
+                useradd -m -s /bin/bash -g ${NORMAL_USER} ${NORMAL_USER} && \
+                usermod -aG sudo ${NORMAL_USER} && \
+                echo ${NORMAL_USER}:${PASSWORD} | chpasswd && \
     wget -q https://packages.microsoft.com/config/ubuntu/$(grep -oP '(?<=^DISTRIB_RELEASE=).+' /etc/lsb-release | tr -d '"')/packages-microsoft-prod.deb && \
     dpkg -i packages-microsoft-prod.deb && \
     apt-get update && \
@@ -56,8 +56,7 @@ apt-get -y upgrade && \
 apt-get -y install container-tools && \
 apt-get install -y crun podman  fuse-overlayfs
 
-RUN curl -s "https://get.sdkman.io" | bash && \
-    chmod 777 -R /root
+RUN curl -s "https://get.sdkman.io" | bash
 
 RUN useradd podman; \
 echo podman:10000:5000 > /etc/subuid; \
@@ -85,30 +84,55 @@ RUN mkdir -p /var/lib/shared/overlay-images /var/lib/shared/overlay-layers /var/
 
 ENV _CONTAINERS_USERNS_CONFIGURED=""
 
-##Install Azure Modules for Powershell - This can take a while, so setting as final step to shorten potential rebuilds
-#RUN pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted ; pwsh -Command Install-Module -Name Az -Force -AllowClobber -Scope AllUsers -Repository PSGallery
-
-#Set User Path with expected paths for new packages
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
-ENV PATHVAR="export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:/usr/local/go:/usr/local/go/dev/bin:/usr/local/bin/python3:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.local/bin:${PATH}"
+#Install Azure Modules for Powershell - This can take a while, so setting as final step to shorten potential rebuilds
+RUN pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy Trusted ; pwsh -Command Install-Module -Name Az -Force -AllowClobber -Scope AllUsers -Repository PSGallery
 
 RUN echo ${PATHVAR} | tee /etc/environment
-#ENV GOPATH=/usr/local/go/dev
 
 ##Set as unpriviledged user for default container execution
 USER linuxbrew
 
-#RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
-#    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/linuxbrew/.bash_profile && \
-#    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/linuxbrew/.bashrc && \
-#    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/linuxbrew/.bash_profile && \
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/linuxbrew/.bashrc && \
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-#RUN brew install gcc tfenv azure-cli go nvm python3 tfsec && tfenv install latest && tfenv use latest
-#RUN cd /home/linuxbrew/ && brew tap kwilczynski/homebrew-pkenv && \
-#    brew install pkenv && pkenv install latest
-
-USER abc
-RUN echo ${PATHVAR} | tee /config/.bashrc
+RUN brew install gcc tfenv azure-cli go nvm python3 tfsec && tfenv install latest && tfenv use latest
+RUN cd /home/linuxbrew/ && brew tap kwilczynski/homebrew-pkenv && \
+    brew install pkenv && pkenv install latest
 
 USER root
-RUN echo ${PATHVAR} | tee /root/.bashrc
+
+RUN apt-get install -y \
+    xfce4 \
+    xfce4-clipman-plugin \
+    xfce4-cpugraph-plugin \
+    xfce4-netload-plugin \
+    xfce4-screenshooter \
+    xfce4-taskmanager \
+    xfce4-terminal \
+    xfce4-xkb-plugin
+
+RUN apt-get install -y \
+    sudo \
+    wget \
+    xorgxrdp \
+    xrdp && \
+    apt remove -y light-locker xscreensaver && \
+    apt autoremove -y && \
+    rm -rf /var/cache/apt /var/lib/apt/lists
+
+COPY run.sh /usr/bin/
+RUN chmod +x /usr/bin/run.sh
+
+# https://github.com/danielguerra69/ubuntu-xrdp/blob/master/Dockerfile
+RUN mkdir /var/run/dbus && \
+    cp /etc/X11/xrdp/xorg.conf /etc/X11 && \
+    sed -i "s/console/anybody/g" /etc/X11/Xwrapper.config && \
+    sed -i "s/xrdp\/xorg/xorg/g" /etc/xrdp/sesman.ini && \
+    echo "xfce4-session" >> /etc/skel/.Xsession
+
+# Docker config
+EXPOSE 3389
+ENTRYPOINT ["/usr/bin/run.sh"]
+
