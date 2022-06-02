@@ -1,4 +1,4 @@
-![example.png]
+![example.png](example.png)
 
 # Introduction
 
@@ -24,6 +24,8 @@ podman pull ghcr.io/libre-devops/gui-tooling-container:latest
 ```
 
 You can also build it using `podman-compose` with the docker-compose linked.
+
+You should use the copy stored within the `gui-tooling-container` part of this repo as that is the one built by the CI/CD.  The other files are kept for development reasons.
 
 ## Saving state
 
