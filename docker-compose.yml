@@ -1,8 +1,20 @@
-version: '3.8'
+---
+version: "3.8"
 services:
-
-  tf-gh-action:
-    build: .
-    image: "ghcr.io/libre-devops/azure-terraform-gh-action-base:latest"
-    container_name: "tf-gh-action"
+  rdesktop:
+    image: ghcr.io/libre-devops/gui-tooling-container:latest
+    container_name: tooling-container
+    privileged: true
+    volumes:
+      - dev-container-home:/home
+      - dev-container-opt:/opt
+    environment:
+      - TZ=Europe/London
+    ports:
+      - 3389:3389
+    shm_size: "1gb" #optional
     restart: unless-stopped
+
+volumes:
+  dev-container-home:
+  dev-container-opt:
