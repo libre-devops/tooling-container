@@ -3,7 +3,6 @@ version: "3.8"
 services:
   rdesktop:
     image: ghcr.io/libre-devops/gui-tooling-container:latest
-    build: ./container
     container_name: tooling-container
     privileged: true
     volumes:
@@ -15,7 +14,6 @@ services:
       - 3389:3389
     shm_size: "1gb" #optional
     restart: unless-stopped
-
 
 volumes:
   dev-container-home:

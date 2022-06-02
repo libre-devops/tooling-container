@@ -110,7 +110,10 @@ RUN cd /home/linuxbrew/ && brew tap kwilczynski/homebrew-pkenv && \
     brew install pkenv && pkenv install latest
 
 RUN pip3 install pipx && \
-    pipx install terraform-compliance checkov ansible-core
+    pipx install terraform-compliance && \
+    pipx install checkov && \
+    pipx install ansible-core && \
+    pipx install podman-compose
 
 USER root
 
