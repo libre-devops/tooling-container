@@ -109,13 +109,14 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
 
 RUN brew install gcc tfenv azure-cli python3 tfsec terraform-docs openjdk yq && tfenv install latest && tfenv use latest
 RUN cd /home/linuxbrew/ && brew tap kwilczynski/homebrew-pkenv && \
-    brew install pkenv && pkenv install latest
+    brew install pkenv && pkenv install 1.8.4
 
 RUN pip3 install pipx && \
     pipx install terraform-compliance && \
     pipx install checkov && \
-    pipx install ansible-core && \
-    pipx install podman-compose
+    pipx install ansible && \
+    pipx install podman-composen && \
+    pipx install bandit
 
 USER root
 
